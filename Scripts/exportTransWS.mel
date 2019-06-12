@@ -1,0 +1,61 @@
+global proc exportTransWS()
+
+//Export xyz points for selObjs
+//get directory of the current file. 
+//Matches the format of DLTdataviewer xyzpts output
+//each marker has 3 columns. columns are ordered sequentially 
+//by order of selection
+
+{	
+string $pointfile = `fileDialog -m 1 -dm "*.csv"`;
+$pointfile = `substitute ".csv" $pointfile ""`;
+string $newfile = $pointfile +".csv";
+$fileId = `fopen $newfile "w"`;
+fprint $fileId "";  
+fclose $fileId;
+
+//list selected selObjs
+string $selObjs[] = `ls -selection`;
+
+$fileId = `fopen $newfile "a"`; 
+	for ($i = 0; $i < (size($selObjs)-1); $i++)
+	{
+	fprint $fileId ($selObjs[$i] + "_tx,");
+	fprint $fileId ($selObjs[$i] + "_ty,");
+	fprint $fileId ($selObjs[$i] + "_tz,");
+	}
+	
+	fprint $fileId ($selObjs[$i] + "_tx,");
+	fprint $fileId ($selObjs[$i] + "_ty,");
+	fprint $fileId ($selObjs[$i] + "_tz,");
+	fprint $fileId "\n";
+	
+	int $i = 0;
+
+//set start and end frames
+int $frame = `findKeyframe -hi both -which first`;
+int $lastframe = `findKeyframe -hi both -which last`;
+currentTime -edit $frame;
+
+while ($frame <= $lastframe)
+{
+
+	for ($i = 0; $i < (size($selObjs)-1); $i++)
+	{
+	vector $xyz = `xform -ws -q -t ($selObjs[$i])`;
+	fprint $fileId (($xyz.x) + ",");
+	fprint $fileId (($xyz.y) + ",");
+	fprint $fileId (($xyz.z) + ",");
+	}
+
+	vector $xyz = `xform -ws -q -t ($selObjs[$i])`;
+	fprint $fileId (($xyz.x) + ",");
+	fprint $fileId (($xyz.y) + ",");
+	fprint $fileId (($xyz.z) + ",");
+	fprint $fileId "\n";
+
+    $frame = $frame + 1;
+    currentTime -edit $frame;
+}
+fclose $fileId;
+}

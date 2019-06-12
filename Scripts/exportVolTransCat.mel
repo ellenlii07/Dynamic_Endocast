@@ -1,0 +1,92 @@
+global proc exportVolTransCat()
+{
+//export XYZ translations of all volume locators
+//(for calculating alpha hulls)
+//Written by Ariel Camp
+//Last updated April 23 2019
+
+//1. select all locators whose XYZ trans you want to export
+
+select -r r:uh01 r:uh02 r:uh03 r:uh04 r:uh05 r:uh06 r:uh07 r:uh08 ;
+
+select -add r:cl01 r:cl02 r:cl03 r:cl04 r:cl05 r:cl06 r:cl07 r:cl08 r:cl09 r:cl010 r:cl011 r:cl012 r:cl013 r:cl014 r:cl015 r:cl016 r:cl017 r:cl018 r:cl019 r:cl020 r:cl021 r:cl022 r:cl023 r:cl024 r:cl025 r:cl026 r:cl027 r:cl036 r:cl037 ;
+
+select -add r:nc01 r:nc02 r:nc03 r:nc04 r:nc05 r:nc06 r:nc07 r:nc08 r:nc09 r:nc010 r:nc011  r:nc014 r:nc015 r:nc016 r:nc017 r:nc018 r:nc019 r:nc020 r:nc021 r:nc022 r:nc023 r:nc024 r:nc025 r:nc026 r:nc027 r:nc028 r:nc029 r:nc030 r:nc031 r:nc032 r:nc033 r:nc035 r:nc036 r:nc038 r:nc039 r:nc040 r:nc041 ;
+
+select -add r:sp01 r:sp02 r:sp03 r:sp04 r:sp05 r:sp06 r:sp07 r:sp08 r:sp09 r:sp010 r:sp011 r:sp012 r:sp013 r:sp014 r:sp015 r:sp016 r:sp017 r:sp018 r:sp019 r:sp020 r:sp021 r:sp022 r:sp023 r:sp024 r:sp025 r:sp026 r:sp027 r:sp028 r:sp029 r:sp030 r:sp031 r:sp032 r:sp033 r:sp034 r:sp035 r:sp036 r:sp037 r:sp038 r:sp039 r:sp040 ;
+
+select -add r:lj01 r:lj02 r:lj03 r:lj04 r:lj05 r:lj06 r:lj07 r:lj08 r:lj09 r:lj010 r:lj012 r:lj013 r:lj014 r:lj015 r:lj016 r:lj017 r:lj018 r:lj019 r:lj020 r:lj021 r:lj022 r:lj023 ;
+
+select -add r:pt01 r:pt02 r:pt03 r:pt04 r:pt05 r:pt06 r:pt07 r:pt08 r:pt09 r:pt010 ;
+
+select -add r:ch01 r:ch02 r:ch03 ;
+
+select -add r:op01 r:op02 r:op03 r:op04 r:op05 r:op06 r:op07 r:op08 r:op09 r:op010 r:op011 r:op012 r:op013 r:op014 r:op015 r:op016 r:op017 r:op018 r:op019 r:op020 r:op021 r:op022 r:op023 r:op024 r:op025 r:op026 r:op027 ;
+
+
+//2. export world-space XYZ translations of these selected locators
+
+//(following script is copied from “exportTransWS.mel” and “exportSelAttr.mel”)
+
+
+//Export xyz points for selObjs
+//get directory of the current file. 
+//Matches the format of DLTdataviewer xyzpts output
+//each marker has 3 columns. columns are ordered sequentially 
+//by order of selection
+
+string $pointfile = `fileDialog -m 1 -dm "*.csv"`;
+$pointfile = `substitute ".csv" $pointfile ""`;
+string $newfile = $pointfile +".csv";
+$fileId = `fopen $newfile "w"`;
+fprint $fileId "";  
+fclose $fileId;
+
+//list selected selObjs
+string $selObjs[] = `ls -selection`;
+
+$fileId = `fopen $newfile "a"`; 
+	fprint $fileId "frame,";
+	for ($i = 0; $i < (size($selObjs)-1); $i++)
+	{
+	fprint $fileId ($selObjs[$i] + "_tx,");
+	fprint $fileId ($selObjs[$i] + "_ty,");
+	fprint $fileId ($selObjs[$i] + "_tz,");
+	}
+	
+	fprint $fileId ($selObjs[$i] + "_tx,");
+	fprint $fileId ($selObjs[$i] + "_ty,");
+	fprint $fileId ($selObjs[$i] + "_tz,");
+	fprint $fileId "\n";
+	
+	int $i = 0;
+
+//set start and end frames
+int $frame = `findKeyframe -hi both -which first`;
+int $lastframe = `findKeyframe -hi both -which last`;
+currentTime -edit $frame;
+
+while ($frame <= $lastframe)
+{
+	fprint $fileId ($frame + ",");
+	for ($i = 0; $i < (size($selObjs)-1); $i++)
+	{
+	vector $xyz = `xform -ws -q -t ($selObjs[$i])`;
+	fprint $fileId (($xyz.x) + ",");
+	fprint $fileId (($xyz.y) + ",");
+	fprint $fileId (($xyz.z) + ",");
+	}
+
+	vector $xyz = `xform -ws -q -t ($selObjs[$i])`;
+	fprint $fileId (($xyz.x) + ",");
+	fprint $fileId (($xyz.y) + ",");
+	fprint $fileId (($xyz.z) + ",");
+	fprint $fileId "\n";
+
+    $frame = $frame + 1;
+    currentTime -edit $frame;
+}
+fclose $fileId;
+
+
+}
